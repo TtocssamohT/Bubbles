@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThomASScott • Animated Bubbles</title>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background-color: black; /* Set background color to black */
+    }
+
+    canvas {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+</head>
+<body>
+    <canvas id="bubbleCanvas"></canvas>
+
+    <script>
+        // Create canvas and context
+        let canvas = document.getElementById('bubbleCanvas');
+        let ctx = canvas.getContext('2d');
+
+        // Set canvas size to match viewport dimensions
+        canvas.width = window.innerWidth * window.devicePixelRatio;
+        canvas.height = window.innerHeight * window.devicePixelRatio;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+
+        // Define array to store bubble particles
+        let bubbles = [];
+
+        // Create bubble particles with random initial positions, sizes, velocities, and colors
+        for (let i = 0; i < 500; i++) {
+            let x = Math.random() * canvas.width;
+            let y = Math.random() * canvas.height;
+            let size = Math.random() * 10 + 5; // Random size between 5 and 15
+            let velocityX = (Math.random() - 0.5) * 1; // Random horizontal velocity
+            let velocityY = (Math.random() - 0.5) * 1; // Random vertical velocity
+            let color = getRandomColor(); // Random color
+            bubbles.push({ x: x, y: y, size: size, velocityX: velocityX, velocityY: velocityY, color: color });
+        }
+
+        // Define function to generate random color
+        function getRandomColor() {
+            let r = Math.floor(Math.random() * 256);
+            let g = Math.floor(Math.random() * 256);
+            let b = Math.floor(Math.random() * 256);
+            return 'rgba(' + r + ',' + g + ',' + b + ', 0.5)'; // Transparent color
+        }
+
+        // Define animation function
+        function animate() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Move and draw each bubble particle
+            bubbles.forEach(bubble => {
+                // Update particle position
+                bubble.x += bubble.velocityX;
+                bubble.y += bubble.velocityY;
+
+                // Draw particle as a translucent circle with random color
+                ctx.beginPath();
+                ctx.arc(bubble.x, bubble.y, bubble.size, 0, Math.PI * 2);
+                ctx.fillStyle = bubble.color;
+                ctx.fill();
+
+                // Reset particle position if it goes off-screen
+                if (bubble.x < 0 || bubble.x > canvas.width || bubble.y < 0 || bubble.y > canvas.height) {
+                    bubble.x = Math.random() * canvas.width;
+                    bubble.y = Math.random() * canvas.height;
+                }
+            });
+
+            // Request next frame of animation
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>
