@@ -57,6 +57,7 @@
 
         // Define array to store bubble particles
         let bubbles = [];
+        let maxSize = 50; // Maximum size of a bubble
 
         // Create white bubbles with random initial positions, sizes, and velocities
         for (let i = 0; i < 50; i++) {
@@ -109,6 +110,35 @@
                 // Check if the bubble has hit the top or bottom edge
                 if (bubble.y - bubble.size < 0 || bubble.y + bubble.size > canvas.height) {
                     bubble.velocityY = -bubble.velocityY; // Reverse vertical velocity
+                }
+
+                // Check for collisions with other bubbles
+                for (let i = index + 1; i < bubbles.length; i++) {
+                    let otherBubble = bubbles[i];
+                    let dx = bubble.x - otherBubble.x;
+                    let dy = bubble.y - otherBubble.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // If bubbles overlap and either bubble exceeds the maximum size, break them up
+                    if (distance < bubble.size + otherBubble.size && (bubble.size > maxSize || otherBubble.size > maxSize)) {
+                        // Break up bubbles
+                        bubbles.splice(i, 1);
+                        bubbles.splice(index, 1);
+                    }
+                    // If bubbles overlap and at least one of them is smaller than the maximum size, merge them
+                    else if (distance < bubble.size + otherBubble.size) {
+                        // Calculate new position and size for the merged bubble
+                        let newX = (bubble.x + otherBubble.x) / 2;
+                        let newY = (bubble.y + otherBubble.y) / 2;
+                        let newSize = Math.sqrt(bubble.size ** 2 + otherBubble.size ** 2);
+
+                        // Remove the collided bubbles
+                        bubbles.splice(i, 1);
+                        bubbles.splice(index, 1);
+
+                        // Add the merged bubble
+                        bubbles.push({ x: newX, y: newY, size: newSize, velocityX: bubble.velocityX, velocityY: bubble.velocityY, color: bubble.color });
+                    }
                 }
 
                 // Draw bubble with black border
