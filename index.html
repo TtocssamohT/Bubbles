@@ -58,6 +58,7 @@
         // Define array to store bubble particles
         let bubbles = [];
         let maxSize = 50; // Maximum size of a bubble
+        let bounceFactor = 0.8; // Factor by which bubbles bounce off each other
 
         // Create white bubbles with random initial positions, sizes, and velocities
         for (let i = 0; i < 50; i++) {
@@ -121,23 +122,41 @@
 
                     // If bubbles overlap and either bubble exceeds the maximum size, break them up
                     if (distance < bubble.size + otherBubble.size && (bubble.size > maxSize || otherBubble.size > maxSize)) {
-                        // Break up bubbles
-                        bubbles.splice(i, 1);
-                        bubbles.splice(index, 1);
+                        // Determine which bubble is larger
+                        let largerBubble = bubble.size > otherBubble.size ? bubble : otherBubble;
+                        let smallerBubble = bubble.size < otherBubble.size ? bubble : otherBubble;
+
+                        // Adjust position so that they no longer overlap
+                        let angle = Math.atan2(dy, dx);
+                        let distanceToMove = largerBubble.size + smallerBubble.size - distance + 1;
+                        largerBubble.x += Math.cos(angle) * distanceToMove;
+                        largerBubble.y += Math.sin(angle) * distanceToMove;
+
+                        // Reverse velocities
+                        largerBubble.velocityX = -largerBubble.velocityX;
+                        largerBubble.velocityY = -largerBubble.velocityY;
                     }
-                    // If bubbles overlap and at least one of them is smaller than the maximum size, merge them
+                    // If bubbles overlap and at least one of them is smaller than the maximum size, make them bounce off each other
                     else if (distance < bubble.size + otherBubble.size) {
-                        // Calculate new position and size for the merged bubble
-                        let newX = (bubble.x + otherBubble.x) / 2;
-                        let newY = (bubble.y + otherBubble.y) / 2;
-                        let newSize = Math.sqrt(bubble.size ** 2 + otherBubble.size ** 2);
+                        // Calculate the angle of collision
+                        let angle = Math.atan2(dy, dx);
 
-                        // Remove the collided bubbles
-                        bubbles.splice(i, 1);
-                        bubbles.splice(index, 1);
+                        // Calculate the new velocities after collision
+                        let magnitude1 = Math.sqrt(bubble.velocityX ** 2 + bubble.velocityY ** 2);
+                        let magnitude2 = Math.sqrt(otherBubble.velocityX ** 2 + otherBubble.velocityY ** 2);
+                        let direction1 = Math.atan2(bubble.velocityY, bubble.velocityX);
+                        let direction2 = Math.atan2(otherBubble.velocityY, otherBubble.velocityX);
 
-                        // Add the merged bubble
-                        bubbles.push({ x: newX, y: newY, size: newSize, velocityX: bubble.velocityX, velocityY: bubble.velocityY, color: bubble.color });
+                        let newVelocityX1 = magnitude1 * Math.cos(direction1 - angle);
+                        let newVelocityY1 = magnitude1 * Math.sin(direction1 - angle);
+                        let newVelocityX2 = magnitude2 * Math.cos(direction2 - angle);
+                        let newVelocityY2 = magnitude2 * Math.sin(direction2 - angle);
+
+                        // Update velocities
+                        bubble.velocityX = (newVelocityX2 * bounceFactor) * Math.cos(angle) + newVelocityX1 * Math.cos(angle + Math.PI / 2);
+                        bubble.velocityY = (newVelocityX2 * bounceFactor) * Math.sin(angle) + newVelocityY1 * Math.sin(angle + Math.PI / 2);
+                        otherBubble.velocityX = (newVelocityX1 * bounceFactor) * Math.cos(angle) + newVelocityX2 * Math.cos(angle + Math.PI / 2);
+                        otherBubble.velocityY = (newVelocityX1 * bounceFactor) * Math.sin(angle) + newVelocityY2 * Math.sin(angle + Math.PI / 2);
                     }
                 }
 
