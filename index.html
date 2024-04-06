@@ -18,6 +18,26 @@
         left: 0;
         width: 100%;
         height: 100%;
+        border: 10px solid black; /* Set the border */
+        box-sizing: border-box; /* Include border in the dimensions */
+    }
+
+    @media (orientation: landscape) {
+        /* Adjust canvas size for landscape orientation */
+        canvas {
+            width: calc(100% - 20px); /* Adjust the width to exclude border */
+            height: 200vh; /* Make canvas height twice the height of viewport */
+            max-height: 100vh; /* Set maximum height to fit viewport */
+        }
+    }
+
+    @media (orientation: portrait) {
+        /* Adjust canvas size for portrait orientation */
+        canvas {
+            width: 100vw; /* Set width to fit viewport */
+            height: calc(100% - 20px); /* Adjust the height to exclude border */
+            max-width: 100vw; /* Set maximum width to fit viewport */
+        }
     }
 </style>
 </head>
@@ -30,31 +50,44 @@
         let ctx = canvas.getContext('2d');
 
         // Set canvas size to match viewport dimensions
-        canvas.width = window.innerWidth * window.devicePixelRatio;
-        canvas.height = window.innerHeight * window.devicePixelRatio;
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = window.innerHeight + 'px';
+        canvas.width = window.innerWidth * window.devicePixelRatio; // Adjust for device pixel ratio
+        canvas.height = window.innerHeight * window.devicePixelRatio; // Adjust for device pixel ratio
+        canvas.style.width = window.innerWidth + 'px'; // Set canvas width in CSS pixels
+        canvas.style.height = window.innerHeight + 'px'; // Set canvas height in CSS pixels
 
         // Define array to store bubble particles
         let bubbles = [];
 
-        // Create bubble particles with random initial positions, sizes, velocities, and colors
-        for (let i = 0; i < 500; i++) {
+        // Create white bubbles with random initial positions, sizes, and velocities
+        for (let i = 0; i < 50; i++) {
             let x = Math.random() * canvas.width;
             let y = Math.random() * canvas.height;
             let size = Math.random() * 10 + 5; // Random size between 5 and 15
-            let velocityX = (Math.random() - 0.5) * 1; // Random horizontal velocity
-            let velocityY = (Math.random() - 0.5) * 1; // Random vertical velocity
-            let color = getRandomColor(); // Random color
-            bubbles.push({ x: x, y: y, size: size, velocityX: velocityX, velocityY: velocityY, color: color });
+            let velocityX = (Math.random() - 0.5) * 3; // Random horizontal velocity (increased speed)
+            let velocityY = (Math.random() - 0.5) * 3; // Random vertical velocity (increased speed)
+            bubbles.push({ x: x, y: y, size: size, velocityX: velocityX, velocityY: velocityY, color: 'rgba(255, 255, 255, 1)' }); // White color
         }
 
-        // Define function to generate random color
-        function getRandomColor() {
-            let r = Math.floor(Math.random() * 256);
-            let g = Math.floor(Math.random() * 256);
-            let b = Math.floor(Math.random() * 256);
-            return 'rgba(' + r + ',' + g + ',' + b + ', 0.5)'; // Transparent color
+        // Create bubbles with base color with random initial positions, sizes, and velocities
+        for (let i = 0; i < 150; i++) {
+            let x, y, size, velocityX, velocityY;
+            let baseColor = '#d04421'; // Base color
+
+            // Ensure newly generated bubble does not overlap with existing bubbles
+            do {
+                x = Math.random() * canvas.width;
+                y = Math.random() * canvas.height;
+                size = Math.random() * 10 + 5; // Random size between 5 and 15
+                velocityX = (Math.random() - 0.5) * 3; // Random horizontal velocity (increased speed)
+                velocityY = (Math.random() - 0.5) * 3; // Random vertical velocity (increased speed)
+            } while (bubbles.some(bubble => distanceBetween(x, y, bubble.x, bubble.y) < size + bubble.size));
+
+            bubbles.push({ x: x, y: y, size: size, velocityX: velocityX, velocityY: velocityY, color: baseColor });
+        }
+
+        // Define function to calculate distance between two points
+        function distanceBetween(x1, y1, x2, y2) {
+            return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
         }
 
         // Define animation function
@@ -63,22 +96,30 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Move and draw each bubble particle
-            bubbles.forEach(bubble => {
+            bubbles.forEach((bubble, index) => {
                 // Update particle position
                 bubble.x += bubble.velocityX;
                 bubble.y += bubble.velocityY;
 
-                // Draw particle as a translucent circle with random color
+                // Check if the bubble has hit the left or right edge
+                if (bubble.x - bubble.size < 0 || bubble.x + bubble.size > canvas.width) {
+                    bubble.velocityX = -bubble.velocityX; // Reverse horizontal velocity
+                }
+
+                // Check if the bubble has hit the top or bottom edge
+                if (bubble.y - bubble.size < 0 || bubble.y + bubble.size > canvas.height) {
+                    bubble.velocityY = -bubble.velocityY; // Reverse vertical velocity
+                }
+
+                // Draw bubble with black border
                 ctx.beginPath();
                 ctx.arc(bubble.x, bubble.y, bubble.size, 0, Math.PI * 2);
+                ctx.strokeStyle = 'black'; // Set stroke color to black
+                ctx.stroke();
+
+                // Fill bubble with color
                 ctx.fillStyle = bubble.color;
                 ctx.fill();
-
-                // Reset particle position if it goes off-screen
-                if (bubble.x < 0 || bubble.x > canvas.width || bubble.y < 0 || bubble.y > canvas.height) {
-                    bubble.x = Math.random() * canvas.width;
-                    bubble.y = Math.random() * canvas.height;
-                }
             });
 
             // Request next frame of animation
